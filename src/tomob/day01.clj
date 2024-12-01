@@ -29,5 +29,17 @@
          (map (fn [[a b]] (abs (- a b))))
          (apply +))))
 
+(defn count-occurances [list-of-numbers init]
+  (if (empty? list-of-numbers) init
+    (count-occurances (rest list-of-numbers)
+                      (conj init [(first list-of-numbers)
+                                  (inc (get init (first list-of-numbers) 0))]))))
+
 (defn step2 []
-  'not-implemented)
+  (let [[left right]
+          (with-open [data (io/reader (io/resource "day01/step1-data.txt"))]
+            (parse-input (line-seq data)))
+        occ (count-occurances right {})]
+    (->> left
+         (map #(* %1 (get occ %1 0)))
+         (apply +))))
