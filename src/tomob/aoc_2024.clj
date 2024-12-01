@@ -1,12 +1,16 @@
 (ns tomob.aoc-2024
   (:gen-class))
 
-(defn greet
-  "Callable entry point to the application."
-  [data]
-  (println (str "Hello, " (or (:name data) "World") "!")))
+(defn step-symbol [day step]
+  (symbol (str "tomob." day "/step" step)))
+
+(defn run-day [day]
+  (let [step1 (requiring-resolve (step-symbol day "1"))
+        step2 (requiring-resolve (step-symbol day "2"))]
+    (println "Step 1: " (step1))
+    (println "Step 2: " (step2))))
 
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (greet {:name (first args)}))
+  (run-day (first args)))
