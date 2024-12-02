@@ -15,15 +15,15 @@
   (unzip (for [line (doall input)]
     (map #(Integer. %) (string/split line #" +")))))
 
-(defn step1 []
+(defn step1 [data]
   (let [[left right]
-          (with-open [data (io/reader (io/resource "day01/step1-data.txt"))]
+          (with-open [data (io/reader data)]
             (parse-input (line-seq data)))]
     (apply + (mapv (comp abs - ) (sort left) (sort right)))))
 
-(defn step2 []
+(defn step2 [data]
   (let [[left right]
-          (with-open [data (io/reader (io/resource "day01/step1-data.txt"))]
+          (with-open [data (io/reader data)]
             (parse-input (line-seq data)))
         occ (frequencies right)]
     (->> left

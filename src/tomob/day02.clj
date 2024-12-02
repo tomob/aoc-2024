@@ -18,8 +18,8 @@
     (< (first report) (second report)) (safe-mono? report #(- %2 %1))
     :else false))
 
-(defn common [filter-fn]
-  (->> (io/resource "day02/step1-data.txt")
+(defn common [data filter-fn]
+  (->> data
        slurp
        string/split-lines
        (map #(string/split % #" +"))
@@ -27,8 +27,8 @@
        (filter filter-fn)
        count))
 
-(defn step1 []
-  (common safe?))
+(defn step1 [data]
+  (common data safe?))
 
 (defn remove-one [coll]
   (map-indexed (fn [idx _]
@@ -39,5 +39,5 @@
   (if (safe? report) true
     (some safe? (remove-one report))))
 
-(defn step2 []
-  (common safe-but-one?))
+(defn step2 [data]
+  (common data safe-but-one?))
