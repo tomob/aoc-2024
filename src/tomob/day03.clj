@@ -13,20 +13,19 @@
     (map #(* (Integer. (second %)) (Integer. (nth % 2))))
     (apply +)))
 
-(defn filter-disabled [enabled instructions]
-  (if (empty? instructions) '()
+(defn filter-disabled [enabled result instructions]
+  (if (empty? instructions) result
     (let [[instruction _ a b] (first instructions)]
       (cond
-        (= instruction "do()") (filter-disabled true (rest instructions))
-        (= instruction "don't()") (filter-disabled false (rest instructions))
-        (not enabled) (filter-disabled enabled (rest instructions))
-        :else (cons (* (Integer. a) (Integer. b)) (filter-disabled enabled (rest instructions)))))))
+        (= instruction "do()") (recur true result (rest instructions))
+        (= instruction "don't()") (recur false result (rest instructions))
+        (not enabled) (recur enabled result (rest instructions))
+        :else (recur enabled (conj result (* (Integer. a) (Integer. b))) (rest instructions))))))
 
 (defn step2 [data]
   (->> 
     data
     slurp
     (re-seq mul-do-dont-regex)
-    (filter-disabled true)
-    (apply +)
-    ))
+    (filter-disabled true [])
+    (apply +)))
