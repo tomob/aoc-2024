@@ -33,6 +33,18 @@
             :when (= "XMAS" word)]
         :found))))
 
+(defn get-cross [x y]
+  [[[(dec x) (dec y)] [x y] [(inc x) (inc y)]]
+   [[(dec x) (inc y)] [x y] [(inc x) (dec y)]]])
 
 (defn step2 [data]
-  :not-implemented)
+  (let [d (-> data slurp string/split-lines to-array-2d)
+        max-x (alength (aget d 0))
+        max-y (alength d)]
+    (count 
+      (for [y (range 1 (dec max-y))
+            x (range 1 (dec max-x))
+            :when (= \A (aget d x y))
+            :let [words (map #(apply str (map (fn [[x y]] (aget d x y)) %)) (get-cross x y))]
+            :when (every? #(or (= "MAS" %) (= "SAM" %)) words)]
+        :found))))
