@@ -44,7 +44,13 @@
     (count 
       (for [y (range 1 (dec max-y))
             x (range 1 (dec max-x))
+            ;; find center of the cross
             :when (= \A (aget d x y))
+            ;; cross is two vectors of three [x y] coordinates
+            ;; - get a character for each of the coordinate
+            ;; - apply str to make it a word
+            ;; - words contains a word for each of cross' vectors
             :let [words (map #(apply str (map (fn [[x y]] (aget d x y)) %)) (get-cross x y))]
+            ;; Both words need to be either SAM or MAS
             :when (every? #(or (= "MAS" %) (= "SAM" %)) words)]
         :found))))
