@@ -40,6 +40,12 @@
          (map get-middle)
          (apply +))))
 
-
 (defn step2 [data]
-  :not-implemented)
+  (let [data (string/split (slurp data) #"\n\n")
+        ordering (parse-ordering (first data))
+        updates (parse-updates (second data))]
+    (->> updates
+         (filter #(not (sorted? ordering %)))
+         (map #(sort (fn [x y] (sort-by-ordering ordering x y)) %))
+         (map get-middle)
+         (apply +))))
