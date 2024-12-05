@@ -21,11 +21,8 @@
   (let [xo (get ordering x)
         yo (get ordering y)]
     (cond
-      (and (nil? xo) (nil? yo)) 0
-      (and (not (nil? xo))
-           (.contains xo y)) -1
-      (and (not (nil? yo))
-           (.contains yo x)) 1
+      (and xo (some #{y} xo)) -1 ;; y is in x's list, so x < y
+      (and yo (some #{x} yo)) 1  ;; x is in y's list, so y < x
       :else 0)))
 
 (defn sorted? [ordering seq]
