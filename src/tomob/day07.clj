@@ -13,17 +13,24 @@
        string/split-lines
        (map parse-line)))
 
+(defn || [x y]
+  (Long/parseLong (str x y)))
+
 (defn calculable?
   ([[result numbers]]
-   (calculable? result (first numbers) (rest numbers)))
+   (calculable? result (first numbers) (rest numbers) false))
 
-  ([result calculation numbers]
+  ([result calculation numbers add-concat]
    (cond
      (empty? numbers) (= result calculation)
      (> calculation result) false ;; early abort, numbers can't decrease
      :else 
-     (or (calculable? result (+ calculation (first numbers)) (rest numbers))
-         (calculable? result (* calculation (first numbers)) (rest numbers))))))
+     (or (calculable? result (+ calculation (first numbers)) (rest numbers) add-concat)
+         (calculable? result (* calculation (first numbers)) (rest numbers) add-concat)
+         (and add-concat (calculable? result (|| calculation (first numbers)) (rest numbers) add-concat))))))
+
+(defn concat-calculable? [[result numbers]]
+  (calculable? result (first numbers) (rest numbers) true))
 
 (defn step1 [data]
   (->> (parse-input data)
@@ -32,4 +39,7 @@
        (apply +)))
 
 (defn step2 [data]
-  :not-implemented)
+  (->> (parse-input data)
+       (filter concat-calculable?)
+       (map first)
+       (apply +)))
