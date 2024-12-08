@@ -29,3 +29,23 @@
   "I don't do a whole lot ... yet."
   [& [day data]]
   (run-day day (or data "data")))
+
+(defn create-day [{number :number}]
+  (let [resource-dir (io/as-file (format "resources/day%02d" number))
+        example-file (io/as-file (format "resources/day%02d/example.txt" number))
+        data-file (io/as-file (format "resources/day%02d/data.txt" number))
+        code-file (io/as-file (format "src/tomob/day%02d.clj" number))]
+    (.mkdir resource-dir)
+    (.createNewFile example-file)
+    (.createNewFile data-file)
+    (.createNewFile code-file)
+    (spit code-file (format
+                      "(ns tomob.day%02d
+  (:require [clojure.string :as string]))
+
+(defn step1 [data]
+  :not-implemented)
+
+(defn step2 [data]
+  :not-implemented)"
+                      number))))
