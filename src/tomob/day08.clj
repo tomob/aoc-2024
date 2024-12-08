@@ -35,8 +35,27 @@
             :let [antinode (get-antinode pair)]
             :when (in-map? antinode max-x max-y)]
         antinode)
-      (into #{})
+      distinct
       count)))
 
+(defn get-antinodes [pair max-x max-y]
+  (take-while #(in-map? % max-x max-y)
+    (->>
+      (iterate (fn [[a b :as pair]]
+                 [b (get-antinode pair)])
+              pair)
+      (mapcat identity)
+      distinct)))
+
 (defn step2 [data]
-  :not-implemented)
+  (let [city-map (-> data slurp string/split-lines to-array-2d)
+        max-x (alength (aget city-map 0))
+        max-y (alength city-map)
+        antenna-types (get-antenna-types city-map max-x max-y)]
+    (->>
+      (for [a antenna-types
+            pair (antenna-pairs a city-map max-x max-y)
+            antinode (get-antinodes pair max-x max-y)]
+        antinode)
+      distinct
+      count)))
