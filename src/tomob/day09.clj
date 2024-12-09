@@ -102,11 +102,11 @@
   (let [anumbers (long-array (flatten numbers))
         info (blocks-info numbers)]
     (loop [free-blocks (build-free-blocks numbers)
-           block-number (dec (count numbers))]
-      (let [block (numbers block-number)]
+           blocks (rseq numbers)]
+      (let [block (first blocks)]
         (cond
-          (zero? block-number) (vec anumbers)
-          (= -1 (first block)) (recur free-blocks (dec block-number))
+          (empty? (rest blocks)) (vec anumbers)
+          (= -1 (first block)) (recur free-blocks (rest blocks))
           :else
           (let [place (find-free-block free-blocks (count block))
                 block-info (info block)]
@@ -118,8 +118,8 @@
                 (let [start-index (:index block-info)]
                   (dotimes [x (:length block-info)]
                     (aset anumbers (+ x start-index) -1)))
-                (recur (second place) (dec block-number)))
-              (recur free-blocks (dec block-number)))))))))
+                (recur (second place) (rest blocks)))
+              (recur free-blocks (rest blocks)))))))))
 
 (defn step2 [data]
   (->> (slurp data)
