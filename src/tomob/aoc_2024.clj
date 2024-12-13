@@ -1,5 +1,6 @@
 (ns tomob.aoc-2024
-  (:require [clojure.java.io :as io])
+  (:require [clojure.java.io :as io]
+            [clojure.string :as string])
   (:gen-class))
 
 (defn step-symbol [day step]
@@ -12,10 +13,11 @@
        first))
 
 (defn get-data-file [day step data]
-  (case data
-    "data" (select-file day "data.txt" (str "step" step "-data.txt"))
-    "example" (select-file day "example.txt" (str "step" step "-example.txt"))
-    (throw (RuntimeException. "Invalid data set"))))
+  (cond
+    (= data "data") (select-file day "data.txt" (str "step" step "-data.txt"))
+    (= data "example") (select-file day "example.txt" (str "step" step "-example.txt"))
+    (string/starts-with? data "example") (select-file day (str data ".txt")) ;; If more examples are needed
+    :else (throw (RuntimeException. "Invalid data set"))))
 
 (defn run-day [day data]
   (let [step1 (requiring-resolve (step-symbol day "1"))
