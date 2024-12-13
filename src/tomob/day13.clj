@@ -3,7 +3,7 @@
 
 (defn parse-numbers [line]
   (->> (re-seq #"[-\d]+" line)
-       (mapv #(Integer. %))))
+       (mapv #(Long. %))))
 
 (defn parse-machine [machine-description]
   (let [lines (string/split-lines machine-description)
@@ -24,8 +24,10 @@
 (defn is-valid? [{a :a b :b :as solution}]
   (cond
     (nil? solution) false
-    (or (> a 100) (> b 100)) false
     :else (and (integer? a) (integer? b))))
+
+(defn less-than-100 [{a :a b :b :as solution}]
+  (and (<= a 100) (<= b 100)))
 
 (defn token-cost [{a :a b :b}]
   (+ (* 3 a) b))
@@ -36,8 +38,19 @@
          (map parse-machine)
          (map #(apply solve-linear-system %))
          (filter is-valid?)
+         (filter less-than-100)
          (map token-cost)
          (apply +))))
 
+(defn add-long [[[a b c] [d e f]]]
+  [[a b (+ c 10000000000000)] [d e (+ f 10000000000000)]])
+
 (defn step2 [data]
-  :not-implemented)
+  (let [machines-descriptions (string/split (slurp data) #"\n\n")]
+    (->> machines-descriptions
+         (map parse-machine)
+         (map add-long)
+         (map #(apply solve-linear-system %))
+         (filter is-valid?)
+         (map token-cost)
+         (apply +))))
