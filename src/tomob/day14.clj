@@ -47,5 +47,31 @@
          (map count)
          (apply *))))
 
+(defn robots->map [robots]
+  (into {}
+        (for [{x :px y :py} robots]
+          [[x y] "#"])))
+
+(defn print-map [[dimx dimy] robots]
+  (dotimes [y dimy]
+    (dotimes [x dimx]
+      (print (get robots [x y] ".")))
+    (println)))
+
 (defn step2 [data]
-  :not-implemented)
+  (let [lines (->> data slurp string/split-lines)
+        [dimx dimy] (parse-numbers (first lines) #"x")
+        robots (map parse-robot-line (rest lines))
+        r-count (count robots)]
+    (loop [i 1]
+      (let [r (map #(move-robot i [dimx dimy] %) robots)
+            qs (split-into-quadrants [dimx dimy] r)
+            counts (map count qs)]
+        (cond
+          (> i 10000) (println "I give up")
+          (some #(> % (/ r-count 3)) counts) (do
+                                              (println "=====--- " i " ---====")
+                                              ;(println counts (- (apply max counts) (apply min counts)))
+                                              (print-map [dimx dimy] (robots->map r))
+                                              (recur (inc i)))
+          :else (recur (inc i)))))))
