@@ -58,6 +58,22 @@
       (print (get robots [x y] ".")))
     (println)))
 
+(defn has-line? [points n]
+  (let [by-y (group-by (comp second key) points)]
+    (some (fn [[_ row-points]]
+            (let [xs (sort (map (comp first key) row-points))]
+              (and (>= (count xs) n)
+                   (loop [xs (seq xs)
+                          prev-x (first xs)
+                          count 1]
+                     (let [x (second xs)]
+                       (cond
+                         (>= count n) true
+                         (not x) false
+                         (= (inc prev-x) x) (recur (rest xs) x (inc count))
+                         :else (recur (rest xs) x 1)))))))
+          by-y)))
+
 (defn step2 [data]
   (let [lines (->> data slurp string/split-lines)
         [dimx dimy] (parse-numbers (first lines) #"x")
@@ -68,10 +84,9 @@
             qs (split-into-quadrants [dimx dimy] r)
             counts (map count qs)]
         (cond
-          (> i 10000) (println "I give up")
-          (some #(> % (/ r-count 3)) counts) (do
-                                              (println "=====--- " i " ---====")
-                                              ;(println counts (- (apply max counts) (apply min counts)))
-                                              (print-map [dimx dimy] (robots->map r))
-                                              (recur (inc i)))
+          (> i 10000) (println "I give up") ;; 10k is an arbitrary big number
+          (has-line? (robots->map r) 10) (do ;; 10 is an arbitrary number
+                                           (println "=====--- " i " ---====")
+                                           (print-map [dimx dimy] (robots->map r))
+                                           i)
           :else (recur (inc i)))))))
