@@ -32,8 +32,9 @@
   [& [day data]]
   (run-day day (or data "data")))
 
-(defn create-day [{number :number}]
-  (let [resource-dir (io/as-file (format "resources/day%02d" number))
+(defn create-day [{number :number :as all}]
+  (let [number (if (nil? number) (Integer. all) number)
+        resource-dir (io/as-file (format "resources/day%02d" number))
         example-file (io/as-file (format "resources/day%02d/example.txt" number))
         data-file (io/as-file (format "resources/day%02d/data.txt" number))
         code-file (io/as-file (format "src/tomob/day%02d.clj" number))]
