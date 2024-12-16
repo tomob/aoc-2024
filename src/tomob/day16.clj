@@ -8,24 +8,26 @@
           :when (= ch (aget maze y x))]
       [x y])))
 
+(def next-moves
+  {:north [[[0 -1] :north]
+           [[1 0] :east]
+           [[-1 0] :west]]
+   :south [[[0 1] :south]
+           [[1 0] :east]
+           [[-1 0] :west]]
+   :east  [[[1 0] :east]
+           [[0 -1] :north]
+           [[0 1] :south]]
+   :west  [[[-1 0] :west]
+           [[0 -1] :north]
+           [[0 1] :south]]})
+
 (defn get-next-positions [maze [x y] dir]
-  (let [moves {:north [[x (dec y)] :north]
-               :south [[x (inc y)] :south]
-               :east  [[(inc x) y] :east]
-               :west  [[(dec x) y] :west]}
-        possible-dirs (case dir
-                       :north [:north :east :west]
-                       :south [:south :east :west]
-                       :east  [:east :north :south]
-                       :west  [:west :north :south])
-        valid? (fn [[[nx ny] _]]
-                 (and (>= nx 0) (>= ny 0)
-                      (< ny (alength maze))
-                      (< nx (alength (aget maze 0)))
-                      (not= \# (aget maze ny nx))))]
-    (->> possible-dirs
-         (map moves)
-         (filter valid?))))
+  (for [[[dx dy] next-dir] (next-moves dir)
+        :let [nx (+ x dx)
+              ny (+ y dy)]
+        :when (not= \# (aget maze ny nx))]
+    [[nx ny] next-dir]))
 
 (defn step-cost [curr-dir next-dir]
   (if (= curr-dir next-dir) 1 1001))
@@ -75,7 +77,7 @@
                                      [q d p])))
                                [(disj q (first q)) dist paths]
                                (for [[next-pos next-dir cost] (get-next-positions maze current-pos curr-dir)
-                                     :let [alt (+ (get dist current-key Integer/MAX_VALUE) 
+                                     :let [alt (+ (get dist current-key Integer/MAX_VALUE)
                                                 (step-cost curr-dir next-dir))]]
                                  [next-pos next-dir alt]))]
         (recur nq ndist npaths)))))
