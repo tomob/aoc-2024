@@ -9,7 +9,7 @@
 (defn select-file [day & files]
   (->> files
        (map #(io/resource (str day "/" %)))
-       (drop-while #(nil? (io/as-file %)))
+       (drop-while #(try (slurp %) false (catch Exception e true)))
        first))
 
 (defn get-data-file [day step data]
