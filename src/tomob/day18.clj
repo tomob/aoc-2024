@@ -15,46 +15,36 @@
     (aset mem-map y x \#))
   mem-map)
 
-(defn get-neighbors [[x y] mem-map]
-  (let [height (alength mem-map)
-        width (alength (aget mem-map 0))
-        possible-moves [[-1 0] [1 0] [0 -1] [0 1]]]
+(defn get-neighbors [[x y] mem-map size]
+  (let [possible-moves [[-1 0] [1 0] [0 -1] [0 1]]]
     (->> possible-moves
          (map (fn [[dx dy]] [(+ x dx) (+ y dy)]))
          (filter (fn [[nx ny]]
-                  (and (>= nx 0) (< nx width)
-                       (>= ny 0) (< ny height)
+                  (and (>= nx 0) (< nx size)
+                       (>= ny 0) (< ny size)
                        (not= \# (aget mem-map ny nx))))))))
 
 (defn find-path [mem-map start end]
-  (loop [queue (conj clojure.lang.PersistentQueue/EMPTY start)
-         visited #{start}
-         parent {}]
-    (if (empty? queue)
-      nil ; No path
-      (let [current (peek queue)
-            queue (pop queue)]
-        (if (= current end)
-          (loop [pos end
-                 path []]
-            (if (nil? pos)
-              (reverse path)
-              (recur (get parent pos) (conj path pos))))
-
-          (let [neighbors (get-neighbors current mem-map)
-                unvisited (remove visited neighbors)]
-            (recur
-              (into queue unvisited)
-              (into visited unvisited)
-              (into parent (map #(vector % current) unvisited)))))))))
+  (let [size (alength mem-map)]
+    (loop [queue (conj clojure.lang.PersistentQueue/EMPTY [start 0])
+           visited #{start}]
+      (if (empty? queue)
+        nil
+        (let [[current steps] (peek queue)
+              queue (pop queue)]
+          (if (= current end)
+            steps
+            (let [neighbors (get-neighbors current mem-map size)
+                  unvisited (remove visited neighbors)]
+              (recur
+                (into queue (map #(vector % (inc steps)) unvisited))
+                (into visited unvisited)))))))))
 
 (defn step1 [data]
   (let [mem-map (create-map 71)
         bytes (parse-bytes (slurp data))]
     (-> (fall-bytes mem-map (take 1024 bytes))
-        (find-path [0 0] [70 70])
-        count
-        dec)))
+        (find-path [0 0] [70 70]))))
 
 (defn find-first-blocking [mem-map bytes n]
   (first
