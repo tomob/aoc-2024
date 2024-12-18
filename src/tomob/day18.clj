@@ -46,13 +46,30 @@
     (-> (fall-bytes mem-map (take 1024 bytes))
         (find-path [0 0] [70 70]))))
 
+(defn copy-2d-array [array]
+  (let [rows (alength array)
+        cols (alength (aget array 0))
+        new-array (make-array Character/TYPE rows cols)]
+    (dotimes [i rows]
+      (dotimes [j cols]
+        (aset new-array i j (aget array i j))))
+    new-array))
+
+(defn test-path-blocked? [mem-map bytes n end-idx]
+  (let [test-map (copy-2d-array mem-map)]
+    (fall-bytes test-map (take end-idx bytes))
+    (nil? (find-path test-map [0 0] [n n]))))
+
 (defn find-first-blocking [mem-map bytes n]
-  (first
-    (for [byte bytes
-          :let [mem-map (fall-bytes mem-map [byte])
-                path (find-path mem-map [0 0] [n n])]
-          :when (nil? path)]
-      byte)))
+  (let [bytes-vec (vec bytes)]
+    (loop [left 0
+           right (count bytes-vec)]
+      (if (>= left right)
+        (get bytes-vec left)
+        (let [mid (quot (+ left right) 2)]
+          (if (test-path-blocked? mem-map bytes-vec n (inc mid))
+            (recur left mid)
+            (recur (inc mid) right)))))))
 
 (defn step2 [data]
   (let [mem-map (create-map 71)
