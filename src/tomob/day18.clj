@@ -52,9 +52,21 @@
   (let [mem-map (create-map 71)
         bytes (parse-bytes (slurp data))]
     (-> (fall-bytes mem-map (take 1024 bytes))
-        (find-path[0 0] [70 70])
+        (find-path [0 0] [70 70])
         count
         dec)))
 
+(defn find-first-blocking [mem-map bytes n]
+  (first
+    (for [byte bytes
+          :let [mem-map (fall-bytes mem-map [byte])
+                path (find-path mem-map [0 0] [n n])]
+          :when (nil? path)]
+      byte)))
+
 (defn step2 [data]
-  :not-implemented)
+  (let [mem-map (create-map 71)
+        bytes (parse-bytes (slurp data))]
+    (fall-bytes mem-map (take 1024 bytes))
+    (->> (find-first-blocking mem-map (drop 1024 bytes) 70)
+         (string/join ","))))
