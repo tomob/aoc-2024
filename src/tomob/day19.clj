@@ -17,25 +17,21 @@
          (filter #(re-matches regex %))
          count)))
 
-(defn memo-arrangements [towels num pattern]
-  (let [cache (atom {})]
-    (letfn [(memo-fn [p]
-              (if-let [[_ v] (find @cache p)] v
-                (let [result (if (empty? p) 1
-                                (->> towels
-                                     (map
-                                       (fn [towel]
-                                         (if-not (.startsWith p towel) 0
-                                           (memo-fn (subs p (count towel))))))
-                                     (reduce +)))]
-                  (swap! cache assoc p result)
-                  result)))]
-      (memo-fn pattern))))
+(def arrangements 
+  (memoize 
+    (fn [towels pattern]
+      (if (empty? pattern) 1
+        (->> towels
+             (map
+               (fn [towel]
+                 (if-not (.startsWith pattern towel) 0
+                   (arrangements towels (subs pattern (count towel))))))
+             (reduce +))))))
 
 (defn step2 [data]
   (let [[towels patterns] (parse-towels (slurp data))
         regex (build-regex towels)]
     (->> patterns
          (filter #(re-matches regex %))
-         (map-indexed #(memo-arrangements towels %1 %2))
-         (apply +))))
+         (map #(arrangements towels %))
+         (reduce +))))
