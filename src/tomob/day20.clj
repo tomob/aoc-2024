@@ -25,20 +25,23 @@
          (filter (fn [[nx ny]]
                   (not= \# (racetrack [nx ny])))))))
 
-(defn count-path [racetrack start end]
-  (loop [queue (conj clojure.lang.PersistentQueue/EMPTY [start 0])
-         visited #{start}]
-    (if (empty? queue)
-      nil
-      (let [[current steps] (peek queue)
-            queue (pop queue)]
-        (if (= current end)
-          steps
-          (let [neighbors (get-neighbors current racetrack)
-                unvisited (remove visited neighbors)]
-            (recur
-              (into queue (map #(vector % (inc steps)) unvisited))
-              (into visited unvisited))))))))
+(defn count-path
+  ([racetrack start end] (count-path racetrack start end Integer/MAX_VALUE))
+  ([racetrack start end max-length]
+    (loop [queue (conj clojure.lang.PersistentQueue/EMPTY [start 0])
+           visited #{start}]
+      (if (empty? queue)
+        nil
+        (let [[current steps] (peek queue)
+              queue (pop queue)]
+          (cond
+            (= current end) steps
+            (> steps max-length) nil
+            :else (let [neighbors (get-neighbors current racetrack)
+                  unvisited (remove visited neighbors)]
+              (recur
+                (into queue (map #(vector % (inc steps)) unvisited))
+                (into visited unvisited)))))))))
 
 (defn is-cheat? [racetrack [x y :as pos]]
   (and (= \# (racetrack pos))
@@ -48,11 +51,13 @@
                 (not= \# (racetrack [x (dec y)]))))))
 
 (defn find-cheats [racetrack start end [max-x max-y] at-least]
-  (let [longest (count-path racetrack start end)]
+  (let [longest (count-path racetrack start end)
+        max-length (- longest at-least)]
     (for [x (range 1 (dec max-x))
           y (range 1 (dec max-y))
           :when (is-cheat? racetrack [x y])
-          :let [l (count-path (assoc racetrack [x y] \.) start end)]
+          :let [l (count-path (assoc racetrack [x y] \.) start end max-length)]
+          :when (not (nil? l))
           :when (>= (- longest l) at-least)]
       [[x y] (- longest l)])))
 
