@@ -10,7 +10,7 @@
    [\9 \1] "<<vvA"  [\0 \5] "^^A"  [\7 \8] ">A"     [\6 \2] "<vA"   [\0 \3] "^>A"   [\3 \0] "<vA"   [\9 \6] "vA"
    [\3 \2] "<A"     [\4 \6] ">>A"  [\0 \6] "^^>A"   [\A \6] "^^A"   [\8 \A] "vvv>A" [\5 \2] "vA"    [\A \3] "^A"
    [\6 \6] "A"      [\4 \5] ">A"   [\A \0] "<A"     [\3 \4] "<<^A"  [\1 \1] "A"     [\8 \1] "<vvA"  [\3 \9] "^^A"
-   [\5 \3] "v>A"    [\6 \8] "^<A"  [\8 \4] "<vA"    [\0 \8] "^^^A"  [\5 \6] ">A"    [\2 \6] "^>A"   [\1 \6] ">>^A"
+   [\5 \3] "v>A"    [\6 \8] "^<A"  [\8 \4] "<vA"    [\0 \8] "^^^A"  [\5 \6] ">A"    [\2 \6] "^>A"   [\1 \6] "^>>A"
    [\3 \8] "<^^A"   [\3 \1] "<<A"  [\1 \2] ">A"     [\A \1] "^<<A"  [\5 \0] "vvA"   [\8 \0] "vvvA"  [\5 \4] "<A"
    [\8 \3] "vv>A"   [\8 \8] "A"    [\6 \3] "vA"     [\7 \9] ">>A"   [\6 \7] "<<^A"  [\1 \9] "^^>>A" [\9 \2] "<vvA"
    [\6 \9] "^A"     [\8 \2] "vvA"  [\9 \A] "vvvA"   [\6 \5] "<A"    [\0 \1] "^<A"   [\2 \A] "v>A"   [\3 \7] "<<^^A"
@@ -25,25 +25,32 @@
 (def dirpad-paths
   {[\> \A] "^A"   [\^ \v] "vA"  [\A \>] "vA"  [\> \v] "<A"
    [\< \A] ">>^A" [\v \v] "A"   [\> \^] "<^A" [\A \^] "<A"
-   [\v \>] ">A"   [\^ \<] "<vA" [\< \v] ">A"  [\^ \^] "A"
+   [\v \>] ">A"   [\^ \<] "v<A" [\< \v] ">A"  [\^ \^] "A"
    [\> \>] "A"    [\^ \>] "v>A" [\< \^] ">^A" [\A \<] "v<<A"
    [\v \A] "^>A"  [\> \<] "<<A" [\< \<] "A"   [\^ \A] ">A"
    [\A \A] "A"    [\A \v] "<vA" [\v \^] "^A"  [\< \>] ">>A"
    [\v \<] "<A"})
 
+(def all-pads (merge keypad-paths dirpad-paths))
+
 (defn get-pairs [code]
   (map (fn [a b] [a b]) (str "A" code) code))
 
-(defn drive-robot [paths code]
-  (apply str
-         (for [pair (get-pairs code)]
-           (paths pair))))
+(declare move-count)
 
-(defn drive-all-robots [code]
-  (->> code
-       (drive-robot keypad-paths)
-       (drive-robot dirpad-paths)
-       (drive-robot dirpad-paths)))
+(def code-length
+ (memoize
+   (fn [depth code]
+     (if (zero? depth)
+       (count code)
+       (reduce +
+         (for [[current next] (get-pairs code)]
+           (move-count current next depth)))))))
+
+(defn move-count [current next depth]
+  (if (= current next) 1
+    (code-length (dec depth)
+                 (all-pads [current next]))))
 
 (defn code->number [code]
   (->> code
@@ -52,14 +59,17 @@
        (Integer. )))
 
 (defn complexity [[code instructions]]
-  (* code (count instructions)))
+  (* code instructions))
 
-(defn step1 [data]
+(defn solve-for [data n]
   (let [codes (->> data slurp string/split-lines)]
     (->> codes
-         (map (fn [code] [(code->number code) (drive-all-robots code)]))
+         (map (fn [code] [(code->number code) (code-length n code)]))
          (map complexity)
          (reduce +))))
 
+(defn step1 [data]
+  (solve-for data 3))
+
 (defn step2 [data]
-  :not-implemented)
+  (solve-for data 26))
