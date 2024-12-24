@@ -35,7 +35,8 @@
 
 (defn build-number [zs]
   (->> zs
-       (sort-by first >)
+       (sort-by first)
+       reverse
        (map second)
        (apply str "2r")
        read-string))
@@ -46,5 +47,41 @@
          calculate
          build-number)))
 
+(defn find-wrong [device]
+  (let [wrong (atom #{})]
+    (doseq [[out rule] device
+            :when (not (integer? rule))
+            :let [[op l1 l2] rule]]
+      (cond
+        (and (.startsWith out "z") (not= "xor" op) (not= out "z45"))
+        (swap! wrong conj out)
+
+        (and (= op "xor")
+             (every? #(not (.startsWith out %)) ["x" "y" "z"])
+             (every? #(not (.startsWith l1 %)) ["x" "y" "z"])
+             (every? #(not (.startsWith l2 %)) ["x" "y" "z"]))
+        (swap! wrong conj out)
+
+        (and (= "and" op) (not= "x00" l1) (not= "x00" l2))
+        (doseq [[subout subrule] device
+                :when (not (integer? subrule))
+                :let [[subop subl1 subl2] subrule]
+                :when (and (or (= out subl1) (= out subl2))
+                           (not= subop "or"))]
+          (swap! wrong conj out))
+
+        (= "xor" op)
+        (doseq [[subout subrule] device
+                :when (not (integer? subrule))
+                :let [[subop subl1 subl2] subrule]
+                :when (and (or (= out subl1) (= out subl2))
+                           (= subop "or"))]
+          (swap! wrong conj out))))
+    @wrong))
+
 (defn step2 [data]
-  :not-implemented)
+  (let [device (parse-device (slurp data))]
+    (->> device
+         find-wrong
+         sort
+         (string/join ","))))
